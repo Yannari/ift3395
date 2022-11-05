@@ -1,3 +1,4 @@
+#1. import all packages
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,6 +7,7 @@ import tensorflow as tfhj
 
 
 def main():
+    # 2. LOAD TESTING AND TRAINING DATASET
     X_train = pd.read_csv(sys.argv[1])
     Y_train = pd.read_csv("train_result.csv")
     test = pd.read_csv(sys.argv[2])
@@ -74,10 +76,16 @@ def main():
     conv_model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     conv_model.fit(X_train, Y_train, epochs=250, validation_data=(X_cv, y_cv))
 
+    # APPLY THE TRAINED LEARNER TO TEST NEW DATA
     y_pred = conv_model.predict(test)
     y_pred = np.argmax(y_pred, axis=1)
     plt.imshow(X_train[1][:, :, 0])
     plt.title(y_pred[1])
     plt.show()
+
+    #PUT DATA IN A CSV
     my_submission = pd.DataFrame({'Index': list(range(0, len(y_pred))), 'Class': y_pred})
     my_submission.to_csv('./submission.csv', index=False)
+
+print("LOADING...")
+main()

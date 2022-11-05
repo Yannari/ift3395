@@ -9,9 +9,8 @@ import sys
 
 
 def main():
-
-	print("LOADING...")
-
+	# 2. LOAD TESTING AND TRAINING DATASET
+    
 
     X_train_file = pd.read_csv(sys.argv[1])
     Y_train_file = pd.read_csv('train_result.csv')
@@ -24,10 +23,14 @@ def main():
     Y_train_file = Y_train_file.values
     #test_file = test_file.values
 
+
+    ##########################################################
+	# TRAIN RANDOM FOREST ALGORITHM
+	##########################################################
+	# Create a RandomForestClassifier object with the parameters over the data
     from sklearn.model_selection import train_test_split
     X_train_file, x_validation, Y_train_file, y_validation = train_test_split(X_train_file, Y_train_file, test_size=0.1, random_state=42)
 
-    
     clf = RandomForestClassifier()
     clf.fit(X_train_file, Y_train_file)
 
@@ -35,14 +38,17 @@ def main():
     print("Validation Accuracy: " + str(accuracy_score(y_validation, prediction_validation)))
     print("Validation Confusion Matrix: \n" + str(confusion_matrix(y_validation, prediction_validation)))
 
+    # APPLY THE TRAINED LEARNER TO TEST NEW DATA
     prediction_test = clf.predict(test_file)
     index = 5
     print("Predicted " + str(prediction_test[index]))
     plt.imshow(test_file.iloc[index].values.reshape((28, 56)), cmap='gray')
     plt.show()
+
+    #PUT DATA IN A CSV
     my_submission = pd.DataFrame({'Index': list(range(0, len(prediction_test))), 'Class': prediction_test})
     my_submission.to_csv('./submission2.csv', index=False)
-    print("data save in submission.csv in the current folder")
+    print("data save in submission2.csv in the current folder")
 
-
+print("LOADING...")
 main()
