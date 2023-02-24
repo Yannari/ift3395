@@ -1,0 +1,98 @@
+double newton(double initial_guess, double* y_values, int array_length, int which_function) {
+  double guess_1 = initial_guess;
+  double final_guess;
+  double derivative = 0.0;
+  do {
+    final_guess = calculate_fcmv(guess_1, y_values, array_length);
+    initial_guess = guess_1;
+    
+    if (which_function == 1) {
+      derivative = calculate_f_1_eps(initial_guess, y_values, array_length);
+    } else if ( which_function == 2) {
+      derivative = calculate_f_2_eps(initial_guess, y_values, array_length);
+    } else {
+      derivative = calculate_dfcmv(initial_guess, y_values, array_length);
+    }
+    
+    guess_1 = initial_guess - final_guess/derivative;
+
+  } while (fabs(guess_1) >= EPSILON_f && fabs(guess_1 - initial_guess) >= EPSILON_f);
+
+  return guess_1;
+}
+
+/*
+  Calculate the function approximation
+    fcmv(current_guess;y_value) =
+    Sum(y_value^(current_guess) * ln(y_value)) / sum(y_value^(current_guess) -
+    1 / current_guess - 1/array_length * sum(ln(y_value)
+*/
+double calculate_fcmv(double current_guess, double* y_values, int array_length) {
+  double sum_1 = 0.0;
+  double sum_2 = 0.0;
+  double sum_3 = 0.0;
+  //array_length = 10;
+  for (int i=0; i < array_length; i++) {
+    double powered_y_value = pow(y_values[i], current_guess);
+    double log_y_value = log(y_values[i]);
+    sum_1 = sum_1 + powered_y_value * log_y_value;
+    sum_2 = sum_2 + powered_y_value;
+    sum_3 = sum_3 + log_y_value;
+  }
+  return sum_1 / sum_2 - 1 / current_guess - 1.0/array_length * sum_3;
+}
+
+/*  Calculate the analytical derivative of fcmv 
+    Sum(y_value^(current_guess) * ln(y_value)^2) / 
+    Sum(y_value^(current_guess) * ln(y_value)) 
+    - 1/current_guess^2
+    */
+double calculate_dfcmv(double current_guess, double* y_values, int array_length) {
+  double sum_1 = 0.0;
+  double sum_2 = 0.0;
+  for (int i=0; i < array_length; i++) {
+    double powered_y_value = pow(y_values[i], current_guess);
+    double log_y_value = log(y_values[i]);
+    sum_1 = sum_1 + powered_y_value * CARRE(log_y_value);
+    sum_2 = sum_2 + powered_y_value * log_y_value;
+  }
+  return sum_1 / sum_2 + 1/CARRE(current_guess);
+}
+
+/*  Modify current_guess value according to f'(x) = f(x+e) - f(x)/e */
+double calculate_f_1_eps(double current_guess, double* y_values, int array_length) {
+  double f_1 = calculate_fcmv(current_guess+EPSILON, y_values, array_length);
+  double f_2 = calculate_fcmv(current_guess, y_values, array_length);
+  return (f_1 - f_2)/EPSILON;
+}
+
+/* Modify current_guess to f'(x) = [-f(x+2e) + 8f(x+e) - 8f(x-e) + f(x-2e)]/12e */
+double calculate_f_2_eps(double current_guess, double* y_values, int array_length) {
+  double f_1 = calculate_fcmv(current_guess+2*EPSILON, y_values, array_length);
+  double f_2 = calculate_fcmv(current_guess+EPSILON, y_values, array_length);
+  double f_3 = calculate_fcmv(current_guess-EPSILON, y_values, array_length);
+  double f_4 = calculate_fcmv(current_guess-2*EPSILON, y_values, array_length);
+  return (-f_1 + 8*f_2 - 8*f_3 + f_4) / (12*EPSILON);
+}
+
+//---------------------------
+//Mandlebrot
+//---------------------------
+
+void mandelbrot(int width, int length, float** Graph2D) {
+  int max_iterations = 200;
+  int diverge_limit = 2;
+  double complex_x;
+  double complex_y;
+  for (int row=0; row < width; row++) {
+    for (int col=0; col < length; col++) {
+      complex_x = 2.0 * (row - width/1.35)/(width - 1);
+      complex_y = 2.0 * (col - length/2.0)/(length - 1);
+
+      // z_0 = 0
+      double x_zero = 0, y_zero = 0, x_k = 0, y_l = 0, n = 0;
+      int color = 0;
+      for (int i=0; i < max_iterations; i++) {
+        x_k = CARRE(x_zero) - CARRE(y_zero) + complex_x;
+        y_l = 2 * x_zero * y_zero + complex_y;
+        n = sqrt(CARRE(x_k) + CARRE(y_l));
